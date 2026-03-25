@@ -1,4 +1,4 @@
-# 🏠 RentEase — Rental Application
+<img width="937" height="476" alt="image" src="https://github.com/user-attachments/assets/489a7b41-2da9-46e0-9636-d1a93c14015f" /># 🏠 RentEase — Rental Application
 
 A full-featured ASP.NET Core 9 MVC rental platform with SQLite, built for India.
 
@@ -130,3 +130,9 @@ Edit `appsettings.json` to change the database path:
 - Uploaded property images are stored in `wwwroot/uploads/`
 - Location-based search uses browser Geolocation API + Haversine formula
 - Phone numbers are only shared via explicit in-chat consent
+
+- <img width="940" height="476" alt="image" src="https://github.com/user-attachments/assets/bb68dee0-0da6-4faf-973c-65cb51fe0082" />
+
+<img width="937" height="476" alt="image" src="https://github.com/user-attachments/assets/5237b03e-0098-483c-a961-c1a73f6e9d97" />
+
+
