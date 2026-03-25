@@ -1,0 +1,208 @@
+@{
+    ViewData["Title"] = "Find Your Perfect Rental Home";
+    var featured = ViewBag.FeaturedProperties as List<RentEase.Models.Property> ?? new();
+    var stats = ViewBag.Stats;
+}
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-overlay"></div>
+    <div class="container hero-content text-center text-white">
+        <h1 class="hero-title">Find Your Perfect<br><span class="text-highlight">Rental Home</span></h1>
+        <p class="hero-subtitle">Apartments, Houses, Co-Living & PG — All in One Place</p>
+
+        <!-- Search Box -->
+        <div class="hero-search-box shadow-lg">
+            <form asp-controller="Property" asp-action="Index" method="get" class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold text-dark small">City / Area</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-geo-alt text-primary"></i></span>
+                        <input type="text" name="City" class="form-control border-start-0 ps-0" placeholder="e.g. Mumbai, Bengaluru..." />
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold text-dark small">Property Type</label>
+                    <select name="PropertyType" class="form-select">
+                        <option value="">All Types</option>
+                        @foreach (var t in Enum.GetValues<RentEase.Models.PropertyType>())
+                        {
+                            <option value="@((int)t)">@t</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold text-dark small">Listing For</label>
+                    <select name="ListingType" class="form-select">
+                        <option value="">Entire / Sharing / Co-Living</option>
+                        <option value="0">Entire Place</option>
+                        <option value="1">Sharing</option>
+                        <option value="2">Co-Living / PG</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                        <i class="bi bi-search me-1"></i>Search
+                    </button>
+                </div>
+            </form>
+            <div class="text-start mt-2">
+                <small class="text-muted">
+                    <i class="bi bi-geo-alt me-1"></i>
+                    <a href="#" id="useLocation" class="text-primary text-decoration-none">Use my current location</a>
+                    &nbsp;|&nbsp; Popular: 
+                    <a href="/Property/Index?City=Mumbai" class="text-muted text-decoration-none me-2">Mumbai</a>
+                    <a href="/Property/Index?City=Bangalore" class="text-muted text-decoration-none me-2">Bangalore</a>
+                    <a href="/Property/Index?City=Delhi" class="text-muted text-decoration-none me-2">Delhi</a>
+                    <a href="/Property/Index?City=Hyderabad" class="text-muted text-decoration-none me-2">Hyderabad</a>
+                    <a href="/Property/Index?City=Pune" class="text-muted text-decoration-none">Pune</a>
+                </small>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Bar -->
+<section class="stats-bar py-3">
+    <div class="container">
+        <div class="row text-center g-3">
+            <div class="col-4">
+                <div class="stat-item">
+                    <span class="stat-number">@(stats?.TotalListings ?? 0)+</span>
+                    <span class="stat-label">Active Listings</span>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="stat-item">
+                    <span class="stat-number">@(stats?.Cities ?? 0)+</span>
+                    <span class="stat-label">Cities</span>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="stat-item">
+                    <span class="stat-number">@(stats?.Users ?? 0)+</span>
+                    <span class="stat-label">Happy Users</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Browse by Type -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="section-title text-center mb-4">Browse by Category</h2>
+        <div class="row g-3 justify-content-center">
+            @{
+                var categories = new[] {
+                    new { Icon = "bi-building", Label = "Apartment", Type = "0", Color = "cat-blue" },
+                    new { Icon = "bi-house", Label = "House", Type = "1", Color = "cat-green" },
+                    new { Icon = "bi-door-open", Label = "Single Room", Type = "2", Color = "cat-orange" },
+                    new { Icon = "bi-people", Label = "Co-Living", Type = "3", Color = "cat-purple" },
+                    new { Icon = "bi-person-workspace", Label = "PG", Type = "4", Color = "cat-red" },
+                    new { Icon = "bi-grid-1x2", Label = "Studio", Type = "5", Color = "cat-teal" },
+                };
+            }
+            @foreach (var cat in categories)
+            {
+                <div class="col-6 col-md-2">
+                    <a href="/Property/Index?PropertyType=@cat.Type" class="category-card @cat.Color text-decoration-none">
+                        <i class="bi @cat.Icon fs-2 mb-2 d-block"></i>
+                        <span class="fw-semibold">@cat.Label</span>
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- Featured Listings -->
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="section-title mb-0">Latest Listings</h2>
+            <a asp-controller="Property" asp-action="Index" class="btn btn-outline-primary btn-sm">View All <i class="bi bi-arrow-right ms-1"></i></a>
+        </div>
+
+        @if (!featured.Any())
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-house-x fs-1 text-muted d-block mb-3"></i>
+                <p class="text-muted">No listings yet. Be the first to post!</p>
+                <a asp-controller="Property" asp-action="Create" class="btn btn-primary">Post a Property</a>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4">
+                @foreach (var p in featured)
+                {
+                    <div class="col-sm-6 col-lg-3">
+                        @await Html.PartialAsync("_PropertyCard", p)
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="py-5 bg-light">
+    <div class="container text-center">
+        <h2 class="section-title mb-5">How It Works</h2>
+        <div class="row g-4">
+            <div class="col-md-3">
+                <div class="how-card">
+                    <div class="how-icon"><i class="bi bi-person-plus"></i></div>
+                    <h5>1. Register</h5>
+                    <p class="text-muted small">Create your free account in seconds</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="how-card">
+                    <div class="how-icon"><i class="bi bi-search"></i></div>
+                    <h5>2. Search</h5>
+                    <p class="text-muted small">Browse by city, filter by your needs</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="how-card">
+                    <div class="how-icon"><i class="bi bi-chat-dots"></i></div>
+                    <h5>3. Chat</h5>
+                    <p class="text-muted small">Message landlords directly in-app</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="how-card">
+                    <div class="how-icon"><i class="bi bi-key"></i></div>
+                    <h5>4. Move In</h5>
+                    <p class="text-muted small">Get the keys and settle into your new home</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section text-white text-center py-5">
+    <div class="container py-3">
+        <h2 class="fw-bold mb-3">Have a Property to Rent?</h2>
+        <p class="mb-4 opacity-75">List for free and reach thousands of tenants across India</p>
+        <a asp-controller="Property" asp-action="Create" class="btn btn-light btn-lg fw-semibold px-5">
+            <i class="bi bi-plus-circle me-2"></i>Post Your Property Free
+        </a>
+    </div>
+</section>
+
+@section Scripts {
+<script>
+document.getElementById('useLocation')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(pos) {
+            window.location = `/Property/Index?UserLat=${pos.coords.latitude}&UserLng=${pos.coords.longitude}&RadiusKm=10`;
+        });
+    }
+});
+</script>
+}

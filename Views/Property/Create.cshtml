@@ -1,0 +1,466 @@
+@model RentEase.ViewModels.PropertyCreateViewModel
+@{
+    ViewData["Title"] = "Post Your Property";
+}
+
+<div class="container py-4" style="max-width:900px;">
+    <div class="text-center mb-4">
+        <h2 class="fw-bold">Post Your Property</h2>
+        <p class="text-muted">Fill in all details to attract the right tenants</p>
+    </div>
+
+    <form asp-action="Create" method="post" enctype="multipart/form-data" id="createForm">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger" style="display:none"></div>
+
+        <!-- Step Tabs -->
+        <ul class="nav nav-tabs form-tabs mb-4" id="formTabs">
+            <li class="nav-item"><button class="nav-link active" data-tab="1" type="button"><i class="bi bi-1-circle me-1"></i>Basic Info</button></li>
+            <li class="nav-item"><button class="nav-link" data-tab="2" type="button"><i class="bi bi-2-circle me-1"></i>Location</button></li>
+            <li class="nav-item"><button class="nav-link" data-tab="3" type="button"><i class="bi bi-3-circle me-1"></i>Amenities</button></li>
+            <li class="nav-item"><button class="nav-link" data-tab="4" type="button"><i class="bi bi-4-circle me-1"></i>Nearby & Prefs</button></li>
+            <li class="nav-item"><button class="nav-link" data-tab="5" type="button"><i class="bi bi-5-circle me-1"></i>Photos & Publish</button></li>
+        </ul>
+
+        <!-- Tab 1: Basic Info -->
+        <div class="form-tab active" id="tab1">
+            <div class="form-card">
+                <h5 class="form-card-title">Basic Information</h5>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label asp-for="Title" class="form-label fw-semibold"></label>
+                        <input asp-for="Title" class="form-control" placeholder="e.g. Spacious 2BHK with Balcony in Koramangala" />
+                        <span asp-validation-for="Title" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="PropertyType" class="form-label fw-semibold"></label>
+                        <select asp-for="PropertyType" class="form-select">
+                            @foreach (var t in Enum.GetValues<RentEase.Models.PropertyType>())
+                            {
+                                <option value="@((int)t)">@t</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="ListingType" class="form-label fw-semibold"></label>
+                        <select asp-for="ListingType" class="form-select" id="listingTypeSelect">
+                            <option value="0">Entire Place</option>
+                            <option value="1">Sharing</option>
+                            <option value="2">Co-Living / PG</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="Description" class="form-label fw-semibold">Description</label>
+                        <textarea asp-for="Description" class="form-control" rows="4" placeholder="Describe your property — highlights, society details, nearby landmarks, etc."></textarea>
+                        <span asp-validation-for="Description" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Bedrooms" class="form-label fw-semibold">Bedrooms</label>
+                        <input asp-for="Bedrooms" type="number" class="form-control" min="0" max="20" />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Bathrooms" class="form-label fw-semibold">Bathrooms</label>
+                        <input asp-for="Bathrooms" type="number" class="form-control" min="0" max="10" />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="AreaSqFt" class="form-label fw-semibold">Area (sq.ft)</label>
+                        <input asp-for="AreaSqFt" type="number" class="form-control" placeholder="e.g. 850" />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="FloorNumber" class="form-label fw-semibold">Floor Number</label>
+                        <input asp-for="FloorNumber" type="number" class="form-control" placeholder="e.g. 3" />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="TotalFloors" class="form-label fw-semibold">Total Floors in Building</label>
+                        <input asp-for="TotalFloors" type="number" class="form-control" placeholder="e.g. 10" />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="AvailableFrom" class="form-label fw-semibold">Available From</label>
+                        <input asp-for="AvailableFrom" type="date" class="form-control" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rent & Deposit -->
+            <div class="form-card mt-3">
+                <h5 class="form-card-title">Rent & Deposit</h5>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label asp-for="RentAmount" class="form-label fw-semibold">Monthly Rent (₹)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">₹</span>
+                            <input asp-for="RentAmount" type="number" class="form-control" placeholder="e.g. 15000" min="0" />
+                        </div>
+                        <span asp-validation-for="RentAmount" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="DepositAmount" class="form-label fw-semibold">Security Deposit (₹)</label>
+                        <div class="input-group">
+                            <span class="input-group-text">₹</span>
+                            <input asp-for="DepositAmount" type="number" class="form-control" placeholder="e.g. 30000" min="0" />
+                        </div>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <div class="form-check mb-2">
+                            <input asp-for="IsNegotiable" class="form-check-input" type="checkbox" />
+                            <label asp-for="IsNegotiable" class="form-check-label fw-semibold">Rent is Negotiable</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sharing Details (conditional) -->
+            <div class="form-card mt-3" id="sharingSection" style="display:none;">
+                <h5 class="form-card-title"><i class="bi bi-people me-2"></i>Sharing / Co-Living Details</h5>
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label asp-for="TotalSharingBeds" class="form-label fw-semibold">Total Beds</label>
+                        <input asp-for="TotalSharingBeds" type="number" class="form-control" min="1" />
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="AvailableBeds" class="form-label fw-semibold">Available Beds</label>
+                        <input asp-for="AvailableBeds" type="number" class="form-control" min="0" />
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="GenderPreference" class="form-label fw-semibold">Gender Preference</label>
+                        <select asp-for="GenderPreference" class="form-select">
+                            <option value="Any">Any</option>
+                            <option value="Male Only">Male Only</option>
+                            <option value="Female Only">Female Only</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label asp-for="OccupationPreference" class="form-label fw-semibold">Occupation Preference</label>
+                        <select asp-for="OccupationPreference" class="form-select">
+                            <option value="Any">Any</option>
+                            <option value="Students">Students</option>
+                            <option value="Working Professionals">Working Professionals</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Included Services</label>
+                        <div class="d-flex gap-4">
+                            <div class="form-check">
+                                <input asp-for="MealsIncluded" class="form-check-input" type="checkbox" />
+                                <label asp-for="MealsIncluded" class="form-check-label">Meals</label>
+                            </div>
+                            <div class="form-check">
+                                <input asp-for="LaundryIncluded" class="form-check-input" type="checkbox" />
+                                <label asp-for="LaundryIncluded" class="form-check-label">Laundry</label>
+                            </div>
+                            <div class="form-check">
+                                <input asp-for="HousekeepingIncluded" class="form-check-input" type="checkbox" />
+                                <label asp-for="HousekeepingIncluded" class="form-check-label">Housekeeping</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end mt-3">
+                <button type="button" class="btn btn-primary next-tab" data-next="2">Next: Location <i class="bi bi-arrow-right ms-1"></i></button>
+            </div>
+        </div>
+
+        <!-- Tab 2: Location -->
+        <div class="form-tab" id="tab2">
+            <div class="form-card">
+                <h5 class="form-card-title">Property Location</h5>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label asp-for="Address" class="form-label fw-semibold">Full Address</label>
+                        <input asp-for="Address" class="form-control" placeholder="House/Flat No., Street, Area" />
+                        <span asp-validation-for="Address" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="City" class="form-label fw-semibold">City</label>
+                        <input asp-for="City" class="form-control" placeholder="e.g. Bengaluru" />
+                        <span asp-validation-for="City" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="State" class="form-label fw-semibold">State</label>
+                        <input asp-for="State" class="form-control" placeholder="e.g. Karnataka" />
+                        <span asp-validation-for="State" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="PinCode" class="form-label fw-semibold">Pin Code</label>
+                        <input asp-for="PinCode" class="form-control" placeholder="e.g. 560034" maxlength="10" />
+                        <span asp-validation-for="PinCode" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Latitude" class="form-label fw-semibold">Latitude <small class="text-muted">(optional, for map)</small></label>
+                        <input asp-for="Latitude" type="number" step="any" class="form-control" placeholder="e.g. 12.9716" id="latInput" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Longitude" class="form-label fw-semibold">Longitude</label>
+                        <input asp-for="Longitude" type="number" step="any" class="form-control" placeholder="e.g. 77.5946" id="lngInput" />
+                    </div>
+                    <div class="col-12">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="getLatLng">
+                            <i class="bi bi-geo-alt me-1"></i>Use My Current Location
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex justify-content-between mt-3">
+                <button type="button" class="btn btn-outline-secondary prev-tab" data-prev="1"><i class="bi bi-arrow-left me-1"></i>Back</button>
+                <button type="button" class="btn btn-primary next-tab" data-next="3">Next: Amenities <i class="bi bi-arrow-right ms-1"></i></button>
+            </div>
+        </div>
+
+        <!-- Tab 3: Amenities -->
+        <div class="form-tab" id="tab3">
+            <div class="form-card">
+                <h5 class="form-card-title">Furnishing Status</h5>
+                <div class="d-flex gap-3 flex-wrap">
+                    @foreach (var f in Enum.GetValues<RentEase.Models.FurnishingStatus>())
+                    {
+                        <div class="form-check form-check-inline furnish-radio">
+                            <input class="form-check-input" type="radio" asp-for="FurnishingStatus" value="@((int)f)" id="furnish_@f" />
+                            <label class="form-check-label" for="furnish_@f">@f</label>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="form-card mt-3" id="furnishedItemsSection">
+                <h5 class="form-card-title">Furnished Items Available</h5>
+                <div class="row g-2">
+                    @{
+                        var furnFields = new[] {
+                            ("HasAC", "bi-thermometer-snow", "Air Conditioner"),
+                            ("HasFridge", "bi-box2", "Refrigerator"),
+                            ("HasWashingMachine", "bi-recycle", "Washing Machine"),
+                            ("HasTV", "bi-tv", "Television"),
+                            ("HasSofa", "bi-couch", "Sofa"),
+                            ("HasWardrobe", "bi-archive", "Wardrobe"),
+                            ("HasDiningTable", "bi-table", "Dining Table"),
+                            ("HasMicrowave", "bi-lightning", "Microwave"),
+                            ("HasGeyser", "bi-thermometer-sun", "Water Heater"),
+                            ("HasCurtains", "bi-columns-gap", "Curtains"),
+                        };
+                    }
+                    @foreach (var (field, icon, label) in furnFields)
+                    {
+                        <div class="col-6 col-md-3">
+                            <div class="amenity-checkbox">
+                                <input type="checkbox" name="@field" id="@field" class="amenity-cb" value="true" />
+                                <label for="@field"><i class="bi @icon me-1"></i>@label</label>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="form-card mt-3">
+                <h5 class="form-card-title">Building Amenities</h5>
+                <div class="row g-2">
+                    @{
+                        var buildFields = new[] {
+                            ("HasLift", "bi-elevator", "Lift / Elevator"),
+                            ("HasBalcony", "bi-building", "Balcony"),
+                            ("HasParking", "bi-p-square", "Parking"),
+                            ("HasPowerBackup", "bi-battery-charging", "Power Backup"),
+                            ("HasSecurity", "bi-shield-check", "Security Guard"),
+                            ("HasGym", "bi-trophy", "Gym"),
+                            ("HasSwimmingPool", "bi-water", "Swimming Pool"),
+                            ("HasPlayground", "bi-bicycle", "Playground"),
+                            ("HasCCTV", "bi-camera-video", "CCTV"),
+                            ("IsGatedCommunity", "bi-shield-lock", "Gated Community"),
+                            ("HasWifi", "bi-wifi", "WiFi"),
+                            ("WaterSupply", "bi-droplet-half", "24/7 Water Supply"),
+                            ("PipedGas", "bi-fire", "Piped Gas"),
+                        };
+                    }
+                    @foreach (var (field, icon, label) in buildFields)
+                    {
+                        <div class="col-6 col-md-3">
+                            <div class="amenity-checkbox">
+                                <input type="checkbox" name="@field" id="@field" class="amenity-cb" value="true" />
+                                <label for="@field"><i class="bi @icon me-1"></i>@label</label>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="d-flex justify-content-between mt-3">
+                <button type="button" class="btn btn-outline-secondary prev-tab" data-prev="2"><i class="bi bi-arrow-left me-1"></i>Back</button>
+                <button type="button" class="btn btn-primary next-tab" data-next="4">Next: Nearby & Prefs <i class="bi bi-arrow-right ms-1"></i></button>
+            </div>
+        </div>
+
+        <!-- Tab 4: Nearby & Preferences -->
+        <div class="form-tab" id="tab4">
+            <div class="form-card">
+                <h5 class="form-card-title">Nearby Places</h5>
+                <p class="text-muted small">Enter comma-separated nearby places to help tenants find your property easily</p>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="NearbyMarkets" class="form-label fw-semibold"><i class="bi bi-shop me-1 text-warning"></i>Nearby Markets</label>
+                        <input asp-for="NearbyMarkets" class="form-control" placeholder="e.g. Big Bazaar, DMart, Reliance Fresh" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="NearbySchools" class="form-label fw-semibold"><i class="bi bi-mortarboard me-1 text-primary"></i>Nearby Schools/Colleges</label>
+                        <input asp-for="NearbySchools" class="form-control" placeholder="e.g. DPS, IIT Bombay (2km)" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="NearbyHospitals" class="form-label fw-semibold"><i class="bi bi-hospital me-1 text-danger"></i>Nearby Hospitals</label>
+                        <input asp-for="NearbyHospitals" class="form-control" placeholder="e.g. Apollo Hospital (1km)" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="NearbyBusStands" class="form-label fw-semibold"><i class="bi bi-bus-front me-1 text-success"></i>Nearby Bus Stands</label>
+                        <input asp-for="NearbyBusStands" class="form-control" placeholder="e.g. Majestic Bus Stand (500m)" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="NearbyMetro" class="form-label fw-semibold"><i class="bi bi-train-front me-1 text-info"></i>Nearby Metro Stations</label>
+                        <input asp-for="NearbyMetro" class="form-control" placeholder="e.g. Indiranagar Metro (800m)" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="NearbyMalls" class="form-label fw-semibold"><i class="bi bi-bag me-1 text-secondary"></i>Nearby Malls/Shopping</label>
+                        <input asp-for="NearbyMalls" class="form-control" placeholder="e.g. Forum Mall (1.2km)" />
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="OtherNearbyPlaces" class="form-label fw-semibold"><i class="bi bi-map me-1"></i>Other Nearby Landmarks</label>
+                        <input asp-for="OtherNearbyPlaces" class="form-control" placeholder="e.g. Park, ATM, Petrol Pump" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-card mt-3">
+                <h5 class="form-card-title">Tenant Preferences</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Who Can Stay?</label>
+                        <div class="d-flex gap-4">
+                            <div class="form-check">
+                                <input asp-for="BachelorsAllowed" class="form-check-input" type="checkbox" />
+                                <label asp-for="BachelorsAllowed" class="form-check-label">Bachelors</label>
+                            </div>
+                            <div class="form-check">
+                                <input asp-for="FamiliesAllowed" class="form-check-input" type="checkbox" />
+                                <label asp-for="FamiliesAllowed" class="form-check-label">Families</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Other Permissions</label>
+                        <div class="d-flex gap-4">
+                            <div class="form-check">
+                                <input asp-for="PetsAllowed" class="form-check-input" type="checkbox" />
+                                <label asp-for="PetsAllowed" class="form-check-label">Pets Allowed</label>
+                            </div>
+                            <div class="form-check">
+                                <input asp-for="SmokingAllowed" class="form-check-input" type="checkbox" />
+                                <label asp-for="SmokingAllowed" class="form-check-label">Smoking Allowed</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-3">
+                <button type="button" class="btn btn-outline-secondary prev-tab" data-prev="3"><i class="bi bi-arrow-left me-1"></i>Back</button>
+                <button type="button" class="btn btn-primary next-tab" data-next="5">Next: Photos <i class="bi bi-arrow-right ms-1"></i></button>
+            </div>
+        </div>
+
+        <!-- Tab 5: Photos & Publish -->
+        <div class="form-tab" id="tab5">
+            <div class="form-card">
+                <h5 class="form-card-title">Property Photos</h5>
+                <p class="text-muted small">Upload up to 10 photos. First photo will be the main display image.</p>
+                <div class="upload-zone" id="uploadZone">
+                    <input type="file" name="Images" id="imageUpload" multiple accept="image/*" class="d-none" />
+                    <div id="uploadPlaceholder">
+                        <i class="bi bi-cloud-upload fs-2 text-muted d-block mb-2"></i>
+                        <p class="mb-1">Drag & drop images or <a href="#" id="browseBtn" class="text-primary">browse</a></p>
+                        <small class="text-muted">JPG, PNG up to 5MB each</small>
+                    </div>
+                    <div id="imagePreview" class="row g-2 mt-2"></div>
+                </div>
+            </div>
+
+            <div class="form-card mt-3">
+                <h5 class="form-card-title">Review & Publish</h5>
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Your listing will be visible to thousands of tenants immediately after publishing. Make sure all details are accurate.
+                </div>
+                <div class="d-flex gap-3 flex-wrap">
+                    <div class="review-item"><i class="bi bi-check-circle text-success me-1"></i>Free to post</div>
+                    <div class="review-item"><i class="bi bi-check-circle text-success me-1"></i>Direct contact with tenants</div>
+                    <div class="review-item"><i class="bi bi-check-circle text-success me-1"></i>Edit anytime</div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-3">
+                <button type="button" class="btn btn-outline-secondary prev-tab" data-prev="4"><i class="bi bi-arrow-left me-1"></i>Back</button>
+                <button type="submit" class="btn btn-success btn-lg fw-semibold px-5">
+                    <i class="bi bi-check2-circle me-2"></i>Publish Listing
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+<script>
+// Tab navigation
+document.querySelectorAll('.next-tab').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(parseInt(btn.dataset.next)));
+});
+document.querySelectorAll('.prev-tab').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(parseInt(btn.dataset.prev)));
+});
+document.querySelectorAll('[data-tab]').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(parseInt(btn.dataset.tab)));
+});
+
+function switchTab(n) {
+    document.querySelectorAll('.form-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('[data-tab]').forEach(t => { t.classList.remove('active'); });
+    document.getElementById('tab' + n).classList.add('active');
+    document.querySelector(`[data-tab="${n}"]`).classList.add('active');
+    window.scrollTo(0, 0);
+}
+
+// Show sharing section when listing type is sharing or co-living
+document.getElementById('listingTypeSelect')?.addEventListener('change', function() {
+    document.getElementById('sharingSection').style.display = (this.value === '1' || this.value === '2') ? 'block' : 'none';
+});
+
+// Location auto-fill
+document.getElementById('getLatLng')?.addEventListener('click', function() {
+    navigator.geolocation?.getCurrentPosition(pos => {
+        document.getElementById('latInput').value = pos.coords.latitude.toFixed(6);
+        document.getElementById('lngInput').value = pos.coords.longitude.toFixed(6);
+    });
+});
+
+// Image preview
+document.getElementById('browseBtn')?.addEventListener('click', e => { e.preventDefault(); document.getElementById('imageUpload').click(); });
+document.getElementById('uploadZone')?.addEventListener('click', e => { if (e.target === e.currentTarget || e.target.id === 'uploadPlaceholder') document.getElementById('imageUpload').click(); });
+document.getElementById('imageUpload')?.addEventListener('change', function() {
+    const preview = document.getElementById('imagePreview');
+    preview.innerHTML = '';
+    Array.from(this.files).slice(0, 10).forEach((f, i) => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            preview.innerHTML += `<div class="col-4 col-md-3"><div class="img-preview-item">${i === 0 ? '<span class="badge bg-primary primary-badge">Main</span>' : ''}<img src="${e.target.result}" class="img-fluid rounded" /></div></div>`;
+        };
+        reader.readAsDataURL(f);
+    });
+});
+
+// Drag & drop
+const zone = document.getElementById('uploadZone');
+['dragover','dragenter'].forEach(e => zone?.addEventListener(e, ev => { ev.preventDefault(); zone.classList.add('dragover'); }));
+['dragleave','drop'].forEach(e => zone?.addEventListener(e, ev => { ev.preventDefault(); zone.classList.remove('dragover'); }));
+zone?.addEventListener('drop', ev => {
+    const dt = new DataTransfer();
+    Array.from(ev.dataTransfer.files).forEach(f => dt.items.add(f));
+    document.getElementById('imageUpload').files = dt.files;
+    document.getElementById('imageUpload').dispatchEvent(new Event('change'));
+});
+</script>
+}

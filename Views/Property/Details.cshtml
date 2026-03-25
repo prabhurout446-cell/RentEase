@@ -1,0 +1,375 @@
+@model RentEase.Models.Property
+@{
+    ViewData["Title"] = Model.Title;
+    var images = Model.Images?.ToList() ?? new();
+    var isOwner = User.Identity?.IsAuthenticated == true && User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == Model.OwnerId;
+}
+
+<div class="container py-4">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Property" asp-action="Index">Properties</a></li>
+            <li class="breadcrumb-item active">@Model.Title</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <!-- Left: Images & Details -->
+        <div class="col-lg-8">
+            <!-- Image Gallery -->
+            <div class="property-gallery mb-4">
+                @if (images.Any())
+                {
+                    <div id="propertyCarousel" class="carousel slide rounded-3 overflow-hidden" data-bs-ride="carousel">
+                        <div class="carousel-indicators">
+                            @for (int i = 0; i < images.Count; i++)
+                            {
+                                <button type="button" data-bs-target="#propertyCarousel" data-bs-slide-to="@i" class="@(i == 0 ? "active" : "")"></button>
+                            }
+                        </div>
+                        <div class="carousel-inner">
+                            @for (int i = 0; i < images.Count; i++)
+                            {
+                                <div class="carousel-item @(i == 0 ? "active" : "")">
+                                    <img src="@images[i].ImagePath" class="d-block w-100 property-detail-img" alt="Property image" onerror="this.src='/images/no-property.svg'" />
+                                </div>
+                            }
+                        </div>
+                        @if (images.Count > 1)
+                        {
+                            <button class="carousel-control-prev" type="button" data-bs-target="#propertyCarousel" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon"></span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#propertyCarousel" data-bs-slide="next">
+                                <span class="carousel-control-next-icon"></span>
+                            </button>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <img src="/images/no-property.svg" class="w-100 rounded-3 property-detail-img" alt="No image available" />
+                }
+            </div>
+
+            <!-- Title & Location -->
+            <div class="detail-card mb-3">
+                <div class="d-flex flex-wrap gap-2 mb-2">
+                    <span class="badge bg-primary">@Model.PropertyType</span>
+                    <span class="badge bg-secondary">@Model.ListingType</span>
+                    <span class="badge bg-info text-dark">@Model.FurnishingStatus</span>
+                    @if (!Model.IsAvailable)
+                    {
+                        <span class="badge bg-danger">Not Available</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success">Available</span>
+                    }
+                </div>
+                <h2 class="fw-bold mb-1">@Model.Title</h2>
+                <p class="text-muted mb-2"><i class="bi bi-geo-alt me-1"></i>@Model.Address, @Model.City, @Model.State - @Model.PinCode</p>
+                <p class="text-muted small"><i class="bi bi-eye me-1"></i>@Model.ViewCount views &nbsp;|&nbsp; <i class="bi bi-calendar3 me-1"></i>Available from @Model.AvailableFrom.ToString("dd MMM yyyy")</p>
+            </div>
+
+            <!-- Key Info -->
+            <div class="detail-card mb-3">
+                <h5 class="detail-section-title">Key Details</h5>
+                <div class="row g-3">
+                    @if (Model.Bedrooms > 0)
+                    {
+                        <div class="col-4 col-md-3">
+                            <div class="key-info-item">
+                                <i class="bi bi-door-closed text-primary"></i>
+                                <span>@Model.Bedrooms BHK</span>
+                            </div>
+                        </div>
+                    }
+                    @if (Model.Bathrooms > 0)
+                    {
+                        <div class="col-4 col-md-3">
+                            <div class="key-info-item">
+                                <i class="bi bi-droplet text-primary"></i>
+                                <span>@Model.Bathrooms Bath</span>
+                            </div>
+                        </div>
+                    }
+                    @if (Model.AreaSqFt.HasValue)
+                    {
+                        <div class="col-4 col-md-3">
+                            <div class="key-info-item">
+                                <i class="bi bi-aspect-ratio text-primary"></i>
+                                <span>@Model.AreaSqFt sq.ft</span>
+                            </div>
+                        </div>
+                    }
+                    @if (Model.FloorNumber.HasValue)
+                    {
+                        <div class="col-4 col-md-3">
+                            <div class="key-info-item">
+                                <i class="bi bi-layers text-primary"></i>
+                                <span>Floor @Model.FloorNumber @(Model.TotalFloors.HasValue ? $"of {Model.TotalFloors}" : "")</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="detail-card mb-3">
+                <h5 class="detail-section-title">Description</h5>
+                <p class="text-muted" style="white-space:pre-line">@Model.Description</p>
+            </div>
+
+            <!-- Sharing / Co-Living Details -->
+            @if (Model.ListingType != RentEase.Models.ListingType.EntirePlace)
+            {
+                <div class="detail-card mb-3">
+                    <h5 class="detail-section-title">Sharing Details</h5>
+                    <div class="row g-2">
+                        @if (Model.TotalSharingBeds.HasValue)
+                        {
+                            <div class="col-6 col-md-4"><div class="info-pill"><i class="bi bi-person-fill me-1"></i>Total Beds: @Model.TotalSharingBeds</div></div>
+                        }
+                        @if (Model.AvailableBeds.HasValue)
+                        {
+                            <div class="col-6 col-md-4"><div class="info-pill text-success"><i class="bi bi-person-check-fill me-1"></i>Available: @Model.AvailableBeds</div></div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.GenderPreference))
+                        {
+                            <div class="col-6 col-md-4"><div class="info-pill"><i class="bi bi-gender-ambiguous me-1"></i>@Model.GenderPreference</div></div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.OccupationPreference))
+                        {
+                            <div class="col-6 col-md-4"><div class="info-pill"><i class="bi bi-briefcase me-1"></i>@Model.OccupationPreference</div></div>
+                        }
+                        @if (Model.MealsIncluded) { <div class="col-6 col-md-4"><div class="info-pill text-success"><i class="bi bi-egg-fried me-1"></i>Meals Included</div></div> }
+                        @if (Model.LaundryIncluded) { <div class="col-6 col-md-4"><div class="info-pill text-success"><i class="bi bi-bag-check me-1"></i>Laundry Included</div></div> }
+                        @if (Model.HousekeepingIncluded) { <div class="col-6 col-md-4"><div class="info-pill text-success"><i class="bi bi-house-check me-1"></i>Housekeeping</div></div> }
+                    </div>
+                </div>
+            }
+
+            <!-- Furnished Amenities -->
+            @if (Model.FurnishingStatus != RentEase.Models.FurnishingStatus.Unfurnished)
+            {
+                <div class="detail-card mb-3">
+                    <h5 class="detail-section-title">Furnished Items</h5>
+                    <div class="amenities-grid">
+                        @{
+                            var furnItems = new[] {
+                                (Model.HasAC, "bi-thermometer-snow", "Air Conditioner"),
+                                (Model.HasFridge, "bi-box2", "Refrigerator"),
+                                (Model.HasWashingMachine, "bi-recycle", "Washing Machine"),
+                                (Model.HasTV, "bi-tv", "Television"),
+                                (Model.HasSofa, "bi-couch", "Sofa"),
+                                (Model.HasWardrobe, "bi-archive", "Wardrobe"),
+                                (Model.HasDiningTable, "bi-table", "Dining Table"),
+                                (Model.HasMicrowave, "bi-lightning", "Microwave"),
+                                (Model.HasGeyser, "bi-thermometer-sun", "Water Heater"),
+                                (Model.HasCurtains, "bi-columns-gap", "Curtains"),
+                            };
+                        }
+                        @foreach (var (has, icon, name) in furnItems)
+                        {
+                            <div class="amenity-item @(has ? "" : "amenity-no")">
+                                <i class="bi @icon"></i>
+                                <span>@name</span>
+                                @if (!has) { <i class="bi bi-x-circle text-danger ms-auto"></i> }
+                                else { <i class="bi bi-check-circle text-success ms-auto"></i> }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Building Amenities -->
+            <div class="detail-card mb-3">
+                <h5 class="detail-section-title">Building & Society Amenities</h5>
+                <div class="amenities-grid">
+                    @{
+                        var buildItems = new[] {
+                            (Model.HasLift, "bi-elevator", "Lift / Elevator"),
+                            (Model.HasBalcony, "bi-building", "Balcony"),
+                            (Model.HasParking, "bi-p-square", "Parking"),
+                            (Model.HasPowerBackup, "bi-battery-charging", "Power Backup"),
+                            (Model.HasSecurity, "bi-shield-check", "Security Guard"),
+                            (Model.HasGym, "bi-trophy", "Gym"),
+                            (Model.HasSwimmingPool, "bi-water", "Swimming Pool"),
+                            (Model.HasPlayground, "bi-bicycle", "Playground"),
+                            (Model.HasCCTV, "bi-camera-video", "CCTV"),
+                            (Model.IsGatedCommunity, "bi-shield-lock", "Gated Community"),
+                            (Model.HasWifi, "bi-wifi", "WiFi"),
+                            (Model.WaterSupply, "bi-droplet-half", "24/7 Water"),
+                            (Model.PipedGas, "bi-fire", "Piped Gas"),
+                        };
+                    }
+                    @foreach (var (has, icon, name) in buildItems)
+                    {
+                        <div class="amenity-item @(has ? "" : "amenity-no")">
+                            <i class="bi @icon"></i>
+                            <span>@name</span>
+                            @if (has) { <i class="bi bi-check-circle text-success ms-auto"></i> }
+                            else { <i class="bi bi-x-circle text-muted ms-auto"></i> }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Nearby Places -->
+            @{
+                bool hasNearby = !string.IsNullOrEmpty(Model.NearbyMarkets) || !string.IsNullOrEmpty(Model.NearbySchools) ||
+                                 !string.IsNullOrEmpty(Model.NearbyHospitals) || !string.IsNullOrEmpty(Model.NearbyBusStands) ||
+                                 !string.IsNullOrEmpty(Model.NearbyMetro) || !string.IsNullOrEmpty(Model.NearbyMalls) ||
+                                 !string.IsNullOrEmpty(Model.OtherNearbyPlaces);
+            }
+            @if (hasNearby)
+            {
+                <div class="detail-card mb-3">
+                    <h5 class="detail-section-title">Nearby Places</h5>
+                    <div class="row g-2">
+                        @if (!string.IsNullOrEmpty(Model.NearbyMarkets))
+                        {
+                            <div class="col-md-6"><div class="nearby-item"><i class="bi bi-shop text-warning"></i><div><strong>Markets</strong><p>@Model.NearbyMarkets</p></div></div></div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.NearbySchools))
+                        {
+                            <div class="col-md-6"><div class="nearby-item"><i class="bi bi-mortarboard text-primary"></i><div><strong>Schools/Colleges</strong><p>@Model.NearbySchools</p></div></div></div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.NearbyHospitals))
+                        {
+                            <div class="col-md-6"><div class="nearby-item"><i class="bi bi-hospital text-danger"></i><div><strong>Hospitals</strong><p>@Model.NearbyHospitals</p></div></div></div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.NearbyBusStands))
+                        {
+                            <div class="col-md-6"><div class="nearby-item"><i class="bi bi-bus-front text-success"></i><div><strong>Bus Stands</strong><p>@Model.NearbyBusStands</p></div></div></div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.NearbyMetro))
+                        {
+                            <div class="col-md-6"><div class="nearby-item"><i class="bi bi-train-front text-info"></i><div><strong>Metro Stations</strong><p>@Model.NearbyMetro</p></div></div></div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.NearbyMalls))
+                        {
+                            <div class="col-md-6"><div class="nearby-item"><i class="bi bi-bag text-purple"></i><div><strong>Malls/Shopping</strong><p>@Model.NearbyMalls</p></div></div></div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.OtherNearbyPlaces))
+                        {
+                            <div class="col-12"><div class="nearby-item"><i class="bi bi-map text-secondary"></i><div><strong>Other Landmarks</strong><p>@Model.OtherNearbyPlaces</p></div></div></div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Tenant Preferences -->
+            <div class="detail-card mb-3">
+                <h5 class="detail-section-title">Tenant Preferences</h5>
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="pref-badge @(Model.BachelorsAllowed ? "pref-yes" : "pref-no")">
+                        <i class="bi @(Model.BachelorsAllowed ? "bi-check-circle" : "bi-x-circle") me-1"></i>Bachelors
+                    </span>
+                    <span class="pref-badge @(Model.FamiliesAllowed ? "pref-yes" : "pref-no")">
+                        <i class="bi @(Model.FamiliesAllowed ? "bi-check-circle" : "bi-x-circle") me-1"></i>Families
+                    </span>
+                    <span class="pref-badge @(Model.PetsAllowed ? "pref-yes" : "pref-no")">
+                        <i class="bi @(Model.PetsAllowed ? "bi-check-circle" : "bi-x-circle") me-1"></i>Pets
+                    </span>
+                    <span class="pref-badge @(Model.SmokingAllowed ? "pref-yes" : "pref-no")">
+                        <i class="bi @(Model.SmokingAllowed ? "bi-check-circle" : "bi-x-circle") me-1"></i>Smoking
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Price & Contact -->
+        <div class="col-lg-4">
+            <div class="sticky-top" style="top:80px;">
+                <!-- Price Card -->
+                <div class="price-card mb-3">
+                    <div class="price-main">
+                        <span class="price-big">₹@Model.RentAmount.ToString("N0")</span>
+                        <span class="price-unit">/month</span>
+                        @if (Model.IsNegotiable)
+                        {
+                            <span class="badge bg-warning text-dark ms-2">Negotiable</span>
+                        }
+                    </div>
+                    @if (Model.DepositAmount > 0)
+                    {
+                        <p class="text-muted mb-0"><i class="bi bi-shield-check me-1"></i>Security Deposit: <strong>₹@Model.DepositAmount.ToString("N0")</strong></p>
+                    }
+                    <hr />
+                    <!-- Owner Info -->
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="owner-avatar me-3">
+                            <i class="bi bi-person-circle fs-3"></i>
+                        </div>
+                        <div>
+                            <p class="mb-0 fw-semibold">@(Model.Owner?.FullName ?? "Owner")</p>
+                            <small class="text-muted">Listed on @Model.CreatedAt.ToString("dd MMM yyyy")</small>
+                        </div>
+                    </div>
+
+                    @if (!isOwner)
+                    {
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <a asp-controller="Chat" asp-action="Conversation"
+                               asp-route-propertyId="@Model.Id"
+                               asp-route-otherUserId="@Model.OwnerId"
+                               class="btn btn-primary w-100 mb-2 fw-semibold">
+                                <i class="bi bi-chat-dots me-2"></i>Send Message
+                            </a>
+                            <form asp-controller="Chat" asp-action="RequestPhone" method="post">
+                                <input type="hidden" name="propertyId" value="@Model.Id" />
+                                <input type="hidden" name="ownerId" value="@Model.OwnerId" />
+                                <button type="submit" class="btn btn-outline-primary w-100">
+                                    <i class="bi bi-telephone me-2"></i>Request Phone Number
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <a asp-controller="Account" asp-action="Login" asp-route-returnUrl="/Property/Details/@Model.Id"
+                               class="btn btn-primary w-100 mb-2 fw-semibold">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>Login to Contact
+                            </a>
+                        }
+                    }
+                    else
+                    {
+                        <a asp-controller="Property" asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning w-100 mb-2">
+                            <i class="bi bi-pencil me-2"></i>Edit Listing
+                        </a>
+                        <form asp-action="ToggleAvailability" asp-route-id="@Model.Id" method="post">
+                            <button type="submit" class="btn btn-outline-secondary w-100 mb-2">
+                                <i class="bi bi-toggle-@(Model.IsAvailable ? "on" : "off") me-2"></i>
+                                Mark as @(Model.IsAvailable ? "Unavailable" : "Available")
+                            </button>
+                        </form>
+                        <form asp-action="Delete" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Delete this listing?')">
+                            <button type="submit" class="btn btn-outline-danger w-100">
+                                <i class="bi bi-trash me-2"></i>Delete Listing
+                            </button>
+                        </form>
+                    }
+                </div>
+
+                <!-- Map placeholder -->
+                @if (Model.Latitude.HasValue && Model.Longitude.HasValue)
+                {
+                    <div class="detail-card">
+                        <h6 class="fw-semibold mb-2"><i class="bi bi-map me-1"></i>Location</h6>
+                        <div id="miniMap" style="height:200px; border-radius:8px; background:#e9ecef; display:flex; align-items:center; justify-content:center;" class="text-muted">
+                            <div class="text-center">
+                                <i class="bi bi-geo-alt-fill fs-3 d-block mb-1 text-danger"></i>
+                                <small>@Model.City, @Model.State</small><br/>
+                                <small class="text-muted">@Model.Latitude, @Model.Longitude</small>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

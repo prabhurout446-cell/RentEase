@@ -1,0 +1,324 @@
+@model RentEase.ViewModels.PropertySearchViewModel
+@{
+    ViewData["Title"] = "Browse Properties";
+    int totalPages = (int)Math.Ceiling((double)Model.TotalCount / Model.PageSize);
+}
+
+<div class="container-fluid px-0">
+    <div class="row g-0" style="min-height:80vh;">
+        <!-- Sidebar Filters -->
+        <div class="col-lg-3 filter-sidebar">
+            <div class="filter-sidebar-inner p-3 sticky-top" style="top:70px; max-height:calc(100vh - 70px); overflow-y:auto;">
+                <h5 class="fw-bold mb-3"><i class="bi bi-sliders me-2"></i>Filters</h5>
+                <form asp-action="Index" method="get" id="filterForm">
+                    <!-- Location -->
+                    <div class="filter-group">
+                        <label class="filter-label">City / Area</label>
+                        <input type="text" name="City" class="form-control form-control-sm" value="@Model.City" placeholder="e.g. Mumbai" />
+                    </div>
+                    <div class="filter-group">
+                        <label class="filter-label">Pin Code</label>
+                        <input type="text" name="PinCode" class="form-control form-control-sm" value="@Model.PinCode" placeholder="e.g. 400001" />
+                    </div>
+
+                    <!-- Nearby -->
+                    <div class="filter-group">
+                        <label class="filter-label">Near Me (km radius)</label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" name="RadiusKm" class="form-control" value="@Model.RadiusKm" placeholder="Radius" min="1" max="100" />
+                            <button type="button" class="btn btn-outline-secondary" id="getNearby" title="Use my location">
+                                <i class="bi bi-geo-alt-fill"></i>
+                            </button>
+                        </div>
+                        <input type="hidden" name="UserLat" id="userLat" value="@Model.UserLat" />
+                        <input type="hidden" name="UserLng" id="userLng" value="@Model.UserLng" />
+                    </div>
+
+                    <!-- Property Type -->
+                    <div class="filter-group">
+                        <label class="filter-label">Property Type</label>
+                        <select name="PropertyType" class="form-select form-select-sm">
+                            <option value="">All Types</option>
+                            @foreach (var t in Enum.GetValues<RentEase.Models.PropertyType>())
+                            {
+                                var isSelected = Model.PropertyType.HasValue && Model.PropertyType.Value == t;
+                                if (isSelected)
+                                {
+                                    <option value="@((int)t)" selected>@t</option>
+                                }
+                                else
+                                {
+                                    <option value="@((int)t)">@t</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Listing Type -->
+                    <div class="filter-group">
+                        <label class="filter-label">Listing For</label>
+                        <select name="ListingType" class="form-select form-select-sm">
+                            <option value="">All</option>
+                            @{
+                                var lt = Model.ListingType;
+                            }
+                            @if (lt == RentEase.Models.ListingType.EntirePlace)
+                            {
+                                <option value="0" selected>Entire Place</option>
+                            }
+                            else
+                            {
+                                <option value="0">Entire Place</option>
+                            }
+                            @if (lt == RentEase.Models.ListingType.Sharing)
+                            {
+                                <option value="1" selected>Sharing</option>
+                            }
+                            else
+                            {
+                                <option value="1">Sharing</option>
+                            }
+                            @if (lt == RentEase.Models.ListingType.CoLiving)
+                            {
+                                <option value="2" selected>Co-Living / PG</option>
+                            }
+                            else
+                            {
+                                <option value="2">Co-Living / PG</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Budget Range -->
+                    <div class="filter-group">
+                        <label class="filter-label">Budget (₹/month)</label>
+                        <div class="row g-1">
+                            <div class="col-6">
+                                <input type="number" name="MinRent" class="form-control form-control-sm" value="@Model.MinRent" placeholder="Min" />
+                            </div>
+                            <div class="col-6">
+                                <input type="number" name="MaxRent" class="form-control form-control-sm" value="@Model.MaxRent" placeholder="Max" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Furnishing -->
+                    <div class="filter-group">
+                        <label class="filter-label">Furnishing</label>
+                        <select name="FurnishingStatus" class="form-select form-select-sm">
+                            <option value="">Any</option>
+                            @{
+                                var fs = Model.FurnishingStatus;
+                            }
+                            @if (fs == RentEase.Models.FurnishingStatus.Unfurnished)
+                            {
+                                <option value="0" selected>Unfurnished</option>
+                            }
+                            else
+                            {
+                                <option value="0">Unfurnished</option>
+                            }
+                            @if (fs == RentEase.Models.FurnishingStatus.SemiFurnished)
+                            {
+                                <option value="1" selected>Semi-Furnished</option>
+                            }
+                            else
+                            {
+                                <option value="1">Semi-Furnished</option>
+                            }
+                            @if (fs == RentEase.Models.FurnishingStatus.FullyFurnished)
+                            {
+                                <option value="2" selected>Fully Furnished</option>
+                            }
+                            else
+                            {
+                                <option value="2">Fully Furnished</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Sort -->
+                    <div class="filter-group">
+                        <label class="filter-label">Sort By</label>
+                        <select name="SortBy" class="form-select form-select-sm">
+                            @{
+                                var sortBy = Model.SortBy ?? "newest";
+                            }
+                            @if (sortBy == "newest")
+                            {
+                                <option value="newest" selected>Newest First</option>
+                            }
+                            else
+                            {
+                                <option value="newest">Newest First</option>
+                            }
+                            @if (sortBy == "rent_asc")
+                            {
+                                <option value="rent_asc" selected>Rent: Low to High</option>
+                            }
+                            else
+                            {
+                                <option value="rent_asc">Rent: Low to High</option>
+                            }
+                            @if (sortBy == "rent_desc")
+                            {
+                                <option value="rent_desc" selected>Rent: High to Low</option>
+                            }
+                            else
+                            {
+                                <option value="rent_desc">Rent: High to Low</option>
+                            }
+                            @if (sortBy == "popular")
+                            {
+                                <option value="popular" selected>Most Popular</option>
+                            }
+                            else
+                            {
+                                <option value="popular">Most Popular</option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Amenity Checkboxes -->
+                    <div class="filter-group">
+                        <label class="filter-label">Must-Have Amenities</label>
+                        <div class="d-flex flex-column gap-1">
+                            <div class="form-check form-check-sm">
+                                @if (Model.HasLift == true)
+                                {
+                                    <input class="form-check-input" type="checkbox" name="HasLift" value="true" checked />
+                                }
+                                else
+                                {
+                                    <input class="form-check-input" type="checkbox" name="HasLift" value="true" />
+                                }
+                                <label class="form-check-label small">Lift / Elevator</label>
+                            </div>
+                            <div class="form-check form-check-sm">
+                                @if (Model.HasBalcony == true)
+                                {
+                                    <input class="form-check-input" type="checkbox" name="HasBalcony" value="true" checked />
+                                }
+                                else
+                                {
+                                    <input class="form-check-input" type="checkbox" name="HasBalcony" value="true" />
+                                }
+                                <label class="form-check-label small">Balcony</label>
+                            </div>
+                            <div class="form-check form-check-sm">
+                                @if (Model.HasParking == true)
+                                {
+                                    <input class="form-check-input" type="checkbox" name="HasParking" value="true" checked />
+                                }
+                                else
+                                {
+                                    <input class="form-check-input" type="checkbox" name="HasParking" value="true" />
+                                }
+                                <label class="form-check-label small">Parking</label>
+                            </div>
+                            <div class="form-check form-check-sm">
+                                @if (Model.HasWifi == true)
+                                {
+                                    <input class="form-check-input" type="checkbox" name="HasWifi" value="true" checked />
+                                }
+                                else
+                                {
+                                    <input class="form-check-input" type="checkbox" name="HasWifi" value="true" />
+                                }
+                                <label class="form-check-label small">WiFi</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-sm w-100 mb-2">
+                        <i class="bi bi-search me-1"></i>Apply Filters
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary btn-sm w-100">
+                        <i class="bi bi-x-circle me-1"></i>Clear Filters
+                    </a>
+                </form>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="col-lg-9 p-3 p-md-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="mb-0 fw-bold">
+                        @if (!string.IsNullOrEmpty(Model.City))
+                        {
+                            <span>Properties in @Model.City</span>
+                        }
+                        else
+                        {
+                            <span>All Properties</span>
+                        }
+                    </h5>
+                    <small class="text-muted">@Model.TotalCount result(s) found</small>
+                </div>
+                <a asp-controller="Property" asp-action="Create" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus me-1"></i>Post Property
+                </a>
+            </div>
+
+            @if (!Model.Results.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-house-x fs-1 text-muted d-block mb-3"></i>
+                    <h5 class="text-muted">No properties found</h5>
+                    <p class="text-muted">Try adjusting your filters or search a different city</p>
+                </div>
+            }
+            else
+            {
+                <div class="row g-3">
+                    @foreach (var p in Model.Results)
+                    {
+                        <div class="col-sm-6 col-xl-4">
+                            @await Html.PartialAsync("_PropertyCard", p)
+                        </div>
+                    }
+                </div>
+
+                @if (totalPages > 1)
+                {
+                    <nav class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            @for (int i = 1; i <= totalPages; i++)
+                            {
+                                if (i == Model.Page)
+                                {
+                                    <li class="page-item active">
+                                        <span class="page-link">@i</span>
+                                    </li>
+                                }
+                                else
+                                {
+                                    <li class="page-item">
+                                        <a class="page-link" href="?City=@Model.City&PinCode=@Model.PinCode&SortBy=@Model.SortBy&Page=@i">@i</a>
+                                    </li>
+                                }
+                            }
+                        </ul>
+                    </nav>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+document.getElementById('getNearby')?.addEventListener('click', function () {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function (pos) {
+            document.getElementById('userLat').value = pos.coords.latitude;
+            document.getElementById('userLng').value = pos.coords.longitude;
+            document.getElementById('filterForm').submit();
+        }, function () {
+            alert('Unable to get your location. Please allow location access.');
+        });
+    }
+});
+</script>
+}

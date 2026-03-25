@@ -1,0 +1,120 @@
+@model RentEase.ViewModels.ChatViewModel
+@{
+    ViewData["Title"] = "Chat";
+    var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+}
+
+<div class="container py-4" style="max-width:800px;">
+    <!-- Property Banner -->
+    <div class="chat-property-banner mb-3">
+        <a asp-controller="Property" asp-action="Details" asp-route-id="@Model.PropertyId" class="text-decoration-none">
+            <div class="d-flex align-items-center gap-3">
+                <i class="bi bi-house-fill fs-3 text-primary"></i>
+                <div>
+                    <p class="mb-0 fw-semibold text-dark">@(Model.Property?.Title ?? "Property")</p>
+                    <small class="text-muted"><i class="bi bi-geo-alt me-1"></i>@Model.Property?.City, @Model.Property?.State &nbsp;|&nbsp; ₹@(Model.Property?.RentAmount.ToString("N0"))/month</small>
+                </div>
+                <i class="bi bi-arrow-right ms-auto text-muted"></i>
+            </div>
+        </a>
+    </div>
+
+    <!-- Chat Header -->
+    <div class="chat-header d-flex align-items-center gap-3 mb-0">
+        <div class="chat-avatar">@(Model.OtherUserName.Length > 0 ? Model.OtherUserName[0].ToString().ToUpper() : "?")</div>
+        <div>
+            <h6 class="mb-0 fw-bold">@Model.OtherUserName</h6>
+            <small class="text-muted">@(Model.Property?.Owner?.Id == currentUserId ? "Tenant" : "Landlord")</small>
+        </div>
+        <a asp-controller="Chat" asp-action="Inbox" class="btn btn-sm btn-outline-secondary ms-auto">
+            <i class="bi bi-arrow-left me-1"></i>Inbox
+        </a>
+    </div>
+
+    <!-- Messages -->
+    <div class="chat-messages-box" id="chatBox">
+        @if (!Model.Messages.Any())
+        {
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-chat-dots fs-2 d-block mb-2"></i>
+                <p>No messages yet. Start the conversation!</p>
+            </div>
+        }
+        else
+        {
+            string? lastDate = null;
+            foreach (var msg in Model.Messages)
+            {
+                var isMine = msg.SenderId == currentUserId;
+                var dateStr = msg.SentAt.ToLocalTime().ToString("dd MMM yyyy");
+
+                if (dateStr != lastDate)
+                {
+                    lastDate = dateStr;
+                    <div class="chat-date-divider"><span>@dateStr</span></div>
+                }
+
+                <div class="chat-bubble-wrap @(isMine ? "mine" : "theirs")">
+                    <div class="chat-bubble @(isMine ? "bubble-mine" : "bubble-theirs") @(msg.IsPhoneShared ? "bubble-phone" : "") @(msg.IsPhoneRequested ? "bubble-request" : "")">
+                        @if (msg.IsPhoneRequested)
+                        {
+                            <i class="bi bi-telephone-fill me-1 text-warning"></i>
+                        }
+                        @if (msg.IsPhoneShared)
+                        {
+                            <i class="bi bi-telephone-fill me-1 text-success"></i>
+                        }
+                        @msg.Message
+                        @if (msg.IsPhoneRequested && !isMine && !Model.Messages.Any(m => m.IsPhoneShared && m.SenderId == currentUserId))
+                        {
+                            <div class="mt-2">
+                                <form asp-action="SharePhone" method="post">
+                                    <input type="hidden" name="messageId" value="@msg.Id" />
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        <i class="bi bi-telephone me-1"></i>Share My Number
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                    <small class="chat-time text-muted">@msg.SentAt.ToLocalTime().ToString("hh:mm tt")</small>
+                </div>
+            }
+        }
+    </div>
+
+    <!-- Input -->
+    <div class="chat-input-bar">
+        <form asp-action="SendMessage" method="post" class="d-flex gap-2 align-items-center">
+            <input type="hidden" name="propertyId" value="@Model.PropertyId" />
+            <input type="hidden" name="receiverId" value="@Model.OtherUserId" />
+            <input type="text" name="message" class="form-control chat-input" placeholder="Type a message..." autocomplete="off" required id="msgInput" />
+            <button type="submit" class="btn btn-primary chat-send-btn">
+                <i class="bi bi-send-fill"></i>
+            </button>
+        </form>
+        @if (Model.Property?.OwnerId != currentUserId)
+        {
+            <div class="mt-2 text-center">
+                <form asp-action="RequestPhone" method="post" class="d-inline">
+                    <input type="hidden" name="propertyId" value="@Model.PropertyId" />
+                    <input type="hidden" name="ownerId" value="@Model.OtherUserId" />
+                    <button type="submit" class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-telephone me-1"></i>Ask for Phone Number
+                    </button>
+                </form>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+<script>
+// Auto-scroll to bottom
+const chatBox = document.getElementById('chatBox');
+if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+
+// Focus input
+document.getElementById('msgInput')?.focus();
+</script>
+}

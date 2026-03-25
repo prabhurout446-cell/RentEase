@@ -1,0 +1,44 @@
+@model RentEase.ViewModels.InboxViewModel
+@{
+    ViewData["Title"] = "Messages";
+}
+
+<div class="container py-4" style="max-width:700px;">
+    <h2 class="fw-bold mb-4"><i class="bi bi-chat-dots me-2"></i>Messages</h2>
+
+    @if (!Model.Conversations.Any())
+    {
+        <div class="text-center py-5">
+            <i class="bi bi-chat-square-dots fs-1 text-muted d-block mb-3"></i>
+            <h5 class="text-muted">No conversations yet</h5>
+            <p class="text-muted">Browse properties and message a landlord to get started</p>
+            <a asp-controller="Property" asp-action="Index" class="btn btn-primary">Browse Properties</a>
+        </div>
+    }
+    else
+    {
+        <div class="inbox-list">
+            @foreach (var conv in Model.Conversations)
+            {
+                <a asp-controller="Chat" asp-action="Conversation"
+                   asp-route-propertyId="@conv.PropertyId"
+                   asp-route-otherUserId="@conv.OtherUserId"
+                   class="inbox-item text-decoration-none">
+                    <div class="inbox-avatar">@(conv.OtherUserName.Length > 0 ? conv.OtherUserName[0].ToString().ToUpper() : "?")</div>
+                    <div class="inbox-content">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <p class="inbox-name mb-0">@conv.OtherUserName</p>
+                            <small class="inbox-time text-muted">@conv.LastMessageTime.ToLocalTime().ToString("dd MMM, hh:mm tt")</small>
+                        </div>
+                        <p class="inbox-property text-muted small mb-0"><i class="bi bi-house me-1"></i>@conv.PropertyTitle</p>
+                        <p class="inbox-preview text-muted small mb-0">@conv.LastMessage</p>
+                    </div>
+                    @if (conv.UnreadCount > 0)
+                    {
+                        <span class="inbox-unread-badge">@conv.UnreadCount</span>
+                    }
+                </a>
+            }
+        </div>
+    }
+</div>

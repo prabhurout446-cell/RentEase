@@ -1,0 +1,68 @@
+@model RentEase.Models.Property
+
+@{
+    var primaryImage = Model.Images?.FirstOrDefault(i => i.IsPrimary) ?? Model.Images?.FirstOrDefault();
+    var imgSrc = primaryImage != null ? primaryImage.ImagePath : "/images/no-property.svg";
+}
+
+<div class="property-card h-100">
+    <a asp-controller="Property" asp-action="Details" asp-route-id="@Model.Id" class="text-decoration-none">
+        <div class="property-card-img-wrap">
+            <img src="@imgSrc" alt="@Model.Title" class="property-card-img" onerror="this.src='/images/no-property.svg'" />
+            <span class="badge-listing-type badge-@Model.ListingType.ToString().ToLower()">@Model.ListingType</span>
+            @if (!Model.IsAvailable)
+            {
+                <span class="badge-unavailable">Unavailable</span>
+            }
+        </div>
+    </a>
+    <div class="property-card-body">
+        <div class="d-flex justify-content-between align-items-start mb-1">
+            <span class="property-type-tag">@Model.PropertyType</span>
+            <span class="furnish-tag">@Model.FurnishingStatus</span>
+        </div>
+        <h6 class="property-title mb-1">
+            <a asp-controller="Property" asp-action="Details" asp-route-id="@Model.Id" class="text-decoration-none text-dark">
+                @Model.Title
+            </a>
+        </h6>
+        <p class="property-location text-muted small mb-2">
+            <i class="bi bi-geo-alt me-1"></i>@Model.City, @Model.State
+        </p>
+        <div class="property-amenities mb-2">
+            @if (Model.Bedrooms > 0)
+            {
+                <span class="amenity-tag"><i class="bi bi-door-closed"></i> @Model.Bedrooms BHK</span>
+            }
+            @if (Model.HasLift)
+            {
+                <span class="amenity-tag"><i class="bi bi-elevator"></i> Lift</span>
+            }
+            @if (Model.HasParking)
+            {
+                <span class="amenity-tag"><i class="bi bi-p-square"></i> Parking</span>
+            }
+            @if (Model.HasWifi)
+            {
+                <span class="amenity-tag"><i class="bi bi-wifi"></i> WiFi</span>
+            }
+            @if (Model.HasBalcony)
+            {
+                <span class="amenity-tag"><i class="bi bi-building"></i> Balcony</span>
+            }
+        </div>
+        <div class="d-flex justify-content-between align-items-center mt-auto">
+            <div>
+                <span class="rent-amount">₹@Model.RentAmount.ToString("N0")</span>
+                <span class="text-muted small">/month</span>
+                @if (Model.IsNegotiable)
+                {
+                    <span class="negotiable-tag ms-1">Negotiable</span>
+                }
+            </div>
+            <a asp-controller="Property" asp-action="Details" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-primary">
+                View
+            </a>
+        </div>
+    </div>
+</div>
